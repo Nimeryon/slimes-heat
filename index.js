@@ -4,8 +4,7 @@ const socket = io('wss://heat-ebs.j38.net/');
 PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
 
 const app = new PIXI.Application({
-    width: 720,
-    height: 480,
+    resizeTo: document.body,
     autoDensity: true,
     resolution: window.devicePixelRatio || 1,
     transparent: true
