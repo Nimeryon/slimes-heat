@@ -6,7 +6,6 @@ PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
 const app = new PIXI.Application({
     resizeTo: document.body,
     autoDensity: true,
-    backgroundColor: 0x1099bb,
     resolution: window.devicePixelRatio || 1,
     transparent: true
 });
