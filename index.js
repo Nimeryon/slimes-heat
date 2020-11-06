@@ -4,7 +4,8 @@ const socket = io('wss://heat-ebs.j38.net/');
 PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
 
 const app = new PIXI.Application({
-    resizeTo: document.body,
+    width: 720,
+    height: 480,
     autoDensity: true,
     resolution: window.devicePixelRatio || 1,
     transparent: true
@@ -134,7 +135,7 @@ loader.load((loader, resources) => {
             this.breathingIn = true;
 
             this.container = new PIXI.Container();
-            this.container.alpha = 0.65;
+            this.container.alpha = 0.55;
             this.container.zindex = randomRange(0, 5);
             this.container.x = this.x;
             this.container.y = this.y;
@@ -244,11 +245,9 @@ loader.load((loader, resources) => {
 
     let slimes = [];
     let index = 0;
-    for (let y = 0; y < 3; y++) {
-        for (let x = 0; x < 10; x++) {
-            slimes[index] = new Slime(randomRange(16, app.screen.width - 16), (y + 1) * 128);
-            index++;
-        }
+    for (let y = 0; y < 15; y++) {
+        slimes[index] = new Slime(randomRange(16, app.screen.width - 16), randomRange(64, app.screen.height - 64));
+        index++;
     }
 
     // Functions
