@@ -1,0 +1,22 @@
+{
+  "name": "slimes-heat",
+  "version": "0.0.5",
+  "description": "Visualiseur pour twitch",
+  "main": "index.html",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Nimeryon/slimes-heat.git"
+  },
+  "author": "Nimerya",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Nimeryon/slimes-heat/issues"
+  },
+  "homepage": "https://github.com/Nimeryon/slimes-heat#readme",
+  "dependencies": {
+    "http-server": "^0.12.3"
+  }
+}
