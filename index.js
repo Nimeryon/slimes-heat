@@ -10,7 +10,7 @@ const app = new PIXI.Application({
     resolution: window.devicePixelRatio || 1,
     //transparent: true
 });
-document.getElementById("main").appendChild(app.view);
+document.body.appendChild(app.view);
 
 // const loader = new PIXI.Loader();
 // loader.add("slime_body", "sprites/body.png");
