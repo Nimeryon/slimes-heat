@@ -13,7 +13,6 @@ let app = new PIXI.Application({
     //autoDensity: true,
     //transparent: true
 });
-mainDiv.appendChild(app.view);
 
 const loader = new PIXI.Loader();
 loader.add("slime_body", "sprites/body.png");
