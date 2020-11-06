@@ -10,8 +10,8 @@ let app = new PIXI.Application({
     backgroundColor: 0xCAD3C8,
     width: 720,
     height: 480,
-    autoDensity: true,
-    transparent: true
+    //autoDensity: true,
+    //transparent: true
 });
 mainDiv.appendChild(app.view);
 
