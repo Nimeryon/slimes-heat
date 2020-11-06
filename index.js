@@ -134,6 +134,7 @@ loader.load((loader, resources) => {
             this.breathingIn = true;
 
             this.container = new PIXI.Container();
+            this.container.alpha = 0.65;
             this.container.zindex = randomRange(0, 5);
             this.container.x = this.x;
             this.container.y = this.y;
