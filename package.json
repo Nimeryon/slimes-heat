@@ -4,7 +4,7 @@
   "description": "Visualiseur pour twitch",
   "main": "index.html",
   "scripts": {
-    "start": "node server.js"
+    "start": "http-server"
   },
   "repository": {
     "type": "git",
@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/Nimeryon/slimes-heat#readme",
   "dependencies": {
+    "@pixi/filter-color-replace": "^3.1.1",
     "http-server": "^0.12.3"
   }
 }

@@ -1,4 +1,4 @@
-//const socket = io('wss://heat-ebs.j38.net/');
+const socket = io('wss://heat-ebs.j38.net/');
 
 //Create pixi app
 PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
@@ -260,7 +260,7 @@ loader.load((loader, resources) => {
     let index = 0;
     for (let y = 0; y < 3; y++) {
         for (let x = 0; x < 10; x++) {
-            slimes[index] = new Slime((x + 1) * 156, (y + 1) * 128);
+            slimes[index] = new Slime(randomRange(16, app.screen.width - 16), (y + 1) * 128);
             index++;
         }
     }
@@ -325,16 +325,16 @@ loader.load((loader, resources) => {
         deltaTime = _deltaTime / 2;
     });
 
-    // // Once connected, join a Twitch channel with your numeric channel id.
-    // socket.on('connect', () => {
-    //     socket.emit("channel", 174535992);
-    // });
+    // Once connected, join a Twitch channel with your numeric channel id.
+    socket.on('connect', () => {
+        socket.emit("channel", 174535992);
+    });
 
-    // // Now, listen for click events.
-    // socket.on('click', (data) => {
-    //     const clickData = JSON.parse(data);
-    //     logClick(clickData.x, clickData.y);
-    // });
+    // Now, listen for click events.
+    socket.on('click', (data) => {
+        const clickData = JSON.parse(data);
+        logClick(clickData.x, clickData.y);
+    });
 
     document.addEventListener("click", (event) => {
         const normalizedX = (event.clientX * 1.0 / window.innerWidth).toPrecision(3);
@@ -347,7 +347,7 @@ loader.load((loader, resources) => {
         for (let i in slimes) {
             slimes[i].update(deltaTime);
         }
-    }, 1000 / 30);
+    }, 1000 / 60);
 
     setInterval(() => {
         logClick(0, 0);
