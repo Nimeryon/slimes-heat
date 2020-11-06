@@ -11,8 +11,8 @@ let app = new PIXI.Application({
     width: 720,
     height: 480,
     view: document.getElementById("canvas"),
-    autoDensity: true,
-    transparent: true
+    //autoDensity: true,
+    //transparent: true
 });
 mainDiv.appendChild(app.view);
 
