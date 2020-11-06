@@ -10,7 +10,6 @@ let app = new PIXI.Application({
     backgroundColor: 0xCAD3C8,
     width: 720,
     height: 480,
-    resizeTo: mainDiv,
     autoDensity: true,
     transparent: true
 });
