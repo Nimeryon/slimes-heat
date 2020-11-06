@@ -8,10 +8,11 @@ PIXI.settings.CREATE_IMAGE_BITMAP = false;
 
 let app = new PIXI.Application({
     backgroundColor: 0xCAD3C8,
+    width: 720,
+    height: 480,
     resizeTo: mainDiv,
     autoDensity: true,
-    resolution: devicePixelRatio,
-    transparent: false
+    transparent: true
 });
 mainDiv.appendChild(app.view);
 
