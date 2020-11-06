@@ -4,7 +4,6 @@ const socket = io('wss://heat-ebs.j38.net/');
 let mainDiv = document.getElementById("main");
 
 PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
-PIXI.settings.CREATE_IMAGE_BITMAP = false;
 
 let app = new PIXI.Application({
     backgroundColor: 0xCAD3C8,
