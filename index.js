@@ -7,11 +7,11 @@ PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
 PIXI.settings.CREATE_IMAGE_BITMAP = false;
 
 let app = new PIXI.Application({
-    //backgroundColor: 0xCAD3C8,
+    backgroundColor: 0xCAD3C8,
     resizeTo: mainDiv,
     autoDensity: true,
     resolution: devicePixelRatio,
-    transparent: true
+    transparent: false
 });
 mainDiv.appendChild(app.view);
 
