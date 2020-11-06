@@ -5,14 +5,14 @@ let mainDiv = document.getElementById("main");
 
 PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
 
-let app = new PIXI.Application({
-    backgroundColor: 0xCAD3C8,
-    width: 720,
-    height: 480,
-    view: document.getElementById("canvas"),
-    //autoDensity: true,
+const app = new PIXI.Application({
+    width: 800,
+    height: 600,
+    backgroundColor: 0x1099bb,
+    resolution: window.devicePixelRatio || 1,
     //transparent: true
 });
+document.getElementById("main").appendChild(app.view);
 
 const loader = new PIXI.Loader();
 loader.add("slime_body", "sprites/body.png");
