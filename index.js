@@ -16,7 +16,6 @@ loader.add("slime_body", "sprites/body.png");
 loader.add("slime_mouse_eye", "sprites/mouses_eyes.png");
 loader.add("slime_hat", "sprites/hat.png");
 loader.load((loader, resources) => {
-    let deltaTime = 0;
 
     // Gravité
     const gravity = 9.81;
@@ -36,7 +35,11 @@ loader.load((loader, resources) => {
     ];
 
     // Bodies
-    const bodies = generateTextures(resources["slime_body"].texture, 3, 1, 32, 21, 0, 0);
+    const bodies = [
+        generateTextures(resources["slime_body"].texture, 1, 16, 32, 21, 0, 0),
+        generateTextures(resources["slime_body"].texture, 1, 16, 32, 21, 32, 0),
+        generateTextures(resources["slime_body"].texture, 1, 16, 32, 21, 64, 0)
+    ];
     const bodies_proba = [
         {
             type: 0,
@@ -117,8 +120,8 @@ loader.load((loader, resources) => {
             this.direction = 0;
 
             this.jumpforce = randomRange(10, 20);
-            this.objectif = randomRange(64, app.screen.width - 64);
-            this.weight = randomRange(1, 2, false);
+            this.objectif = randomRange(16, app.screen.width - 16);
+            this.weight = randomRange(0.5, 1.5, false);
             this.speed = randomRange(slime_speed.min, slime_speed.max);
             this.yvelocity = 0;
 
@@ -138,15 +141,13 @@ loader.load((loader, resources) => {
             this.container.scale.y = this.scale;
             this.container.sortableChildren = true;
 
-            this.body_texture = bodies[randomProba(bodies_proba)];
+            this.body_texture = bodies[randomProba(bodies_proba)][randomRange(0, 15)];
             this.body = createSprite(this.body_texture, 0, 0, 1, 0, { x: 0.5, y: 1 }, { x: 1, y: 1 });
             this.body.zindex = 0;
-            this.changeColor();
 
             this.eye_texture = eyes[randomRange(0, eyes.length - 1)];
             this.eye = createSprite(this.eye_texture, 0, -13, 1, 0, { x: 0.5, y: 0.5 }, { x: 1.2, y: 1.2 });
             this.eye.zindex = 1;
-            this.changeEyeColor();
 
             this.mouse_texture = mouses[randomRange(0, mouses.length - 1)];
             this.mouse = createSprite(this.mouse_texture, 0, -7, 1, 0, { x: 0.5, y: 0.5 }, { x: 1.2, y: 1.2 });
@@ -164,11 +165,11 @@ loader.load((loader, resources) => {
             app.stage.addChild(this.container);
         }
 
-        update() {
+        update(deltaTime) {
             // Mouvement
             if (this.is_grounded) {
                 if (this.objectif - 5 < this.container.x && this.objectif + 5 > this.container.x) {
-                    this.objectif = randomRange(64, app.screen.width - 64);
+                    this.objectif = randomRange(16, app.screen.width - 16);
                     return;
                 }
 
@@ -195,17 +196,17 @@ loader.load((loader, resources) => {
                 this.container.y = app.screen.height;
             }
 
-            this.breath();
+            this.breath(deltaTime);
         }
 
         jump() {
             if (!this.is_jumpîng && this.is_grounded) {
                 this.is_jumpîng = true;
-                this.yvelocity -= this.jumpforce + randomRange(-5, 5, false);
+                this.yvelocity -= this.jumpforce + randomRange(-3, 3, false);
             }
         }
 
-        breath() {
+        breath(deltaTime) {
             if (this.canBreath == false) {
                 this.breathTimer += deltaTime;
                 if (this.breathTimer > this.timeBreath) {
@@ -232,21 +233,6 @@ loader.load((loader, resources) => {
                     }
                 }
             }
-        }
-
-        changeEyeColor() {
-            this.eye_color = eye_colors[randomRange(0, eye_colors.length - 1)];
-            this.eye.filters = [
-                new PIXI.filters.ColorReplaceFilter(0xff0000, this.eye_color, 0.001)
-            ];
-        }
-
-        changeColor() {
-            this.colors = colors[randomRange(0, colors.length - 1)];
-            this.body.filters = [
-                new PIXI.filters.ColorReplaceFilter(0xffffff, this.colors.color, 0.001),
-                new PIXI.filters.ColorReplaceFilter(0x00ff00, this.colors.shadow, 0.001)
-            ];
         }
 
         move(x, y) {
@@ -320,8 +306,10 @@ loader.load((loader, resources) => {
         return sprite;
     }
 
-    app.ticker.add((_deltaTime) => {
-        deltaTime = _deltaTime / 2;
+    app.ticker.add((deltaTime) => {
+        for (let i in slimes) {
+            slimes[i].update(deltaTime);
+        }
     });
 
     // Once connected, join a Twitch channel with your numeric channel id.
@@ -341,16 +329,6 @@ loader.load((loader, resources) => {
 
         logClick(normalizedX, normalizedY);
     });
-
-    setInterval(() => {
-        for (let i in slimes) {
-            slimes[i].update(deltaTime);
-        }
-    }, 1000 / 60);
-
-    setInterval(() => {
-        logClick(0, 0);
-    }, 100);
 });
 
 app.loader.onError.add((error) => console.error(error));
