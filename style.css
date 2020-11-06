@@ -1,0 +1,19 @@
+body, html {
+    height: 100%;
+}
+
+body {
+    background-color: rgba(177, 27, 27, 0);
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+}
+
+#main {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    user-select: none;
+}
