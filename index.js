@@ -1,7 +1,7 @@
 //const socket = io('wss://heat-ebs.j38.net/');
 
 //Create pixi app
-PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
+//PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
 
 const app = new PIXI.Application({
     width: 800,
