@@ -135,7 +135,7 @@ loader.load((loader, resources) => {
             this.is_jumpîng = false;
             this.direction = 0;
 
-            this.scale = randomRange(1.5, 3, false);
+            this.scale = randomRange(1, 2, false);
             this.min_scale = { x: this.scale + 0.3, y: this.scale - 0.3 };
 
             this.jumpforce = randomRange(12, 20);
