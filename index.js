@@ -16,13 +16,16 @@ loader.add("slime_body", "sprites/body.png");
 loader.add("slime_mouse_eye", "sprites/mouses_eyes.png");
 loader.add("slime_hat", "sprites/hat.png");
 loader.load((loader, resources) => {
+    let last_viewer_count = 0;
+    let viewer_count = 0;
+    let slime_index = 0;
 
     // Gravité
     const gravity = 9.81;
     const slime_speed = { min: 1, max: 3 };
 
     // Hats
-    const hats = generateTextures(resources["slime_hat"].texture, 6, 6, 16, 16, 0, 0);
+    const hats = generateTextures(resources["slime_hat"].texture, 6, 11, 32, 48, 0, 0);
     const hats_proba = [
         {
             type: -1,
@@ -38,12 +41,14 @@ loader.load((loader, resources) => {
     const bodies = [
         generateTextures(resources["slime_body"].texture, 1, 16, 32, 21, 0, 0),
         generateTextures(resources["slime_body"].texture, 1, 16, 32, 21, 32, 0),
-        generateTextures(resources["slime_body"].texture, 1, 16, 32, 21, 64, 0)
+        generateTextures(resources["slime_body"].texture, 1, 16, 32, 21, 64, 0),
+        generateTextures(resources["slime_body"].texture, 1, 16, 32, 21, 96, 0),
+        generateTextures(resources["slime_body"].texture, 1, 16, 32, 21, 128, 0)
     ];
     const bodies_proba = [
         {
             type: 0,
-            proba: 60
+            proba: 50
         },
         {
             type: 1,
@@ -51,7 +56,15 @@ loader.load((loader, resources) => {
         },
         {
             type: 2,
-            proba: 20
+            proba: 15
+        },
+        {
+            type: 3,
+            proba: 10
+        },
+        {
+            type: 4,
+            proba: 5
         }
     ];
 
@@ -115,18 +128,20 @@ loader.load((loader, resources) => {
             this.x = x;
             this.y = y;
 
+            this.pass_ground = false;
+            this.dying = false;
             this.is_grounded = false;
             this.is_jumpîng = false;
             this.direction = 0;
 
-            this.jumpforce = randomRange(10, 20);
-            this.objectif = randomRange(16, app.screen.width - 16);
+            this.scale = randomRange(1.5, 3, false);
+            this.min_scale = { x: this.scale + 0.3, y: this.scale - 0.3 };
+
+            this.jumpforce = randomRange(12, 20);
+            this.objectif = randomRange(16 * this.scale, app.screen.width - (16 * this.scale));
             this.weight = randomRange(0.5, 1.5, false);
             this.speed = randomRange(slime_speed.min, slime_speed.max);
             this.yvelocity = 0;
-
-            this.scale = randomRange(1.5, 2, false);
-            this.min_scale = { x: this.scale + 0.3, y: this.scale - 0.3 };
 
             this.canBreath = false;
             this.breathTimer = 0;
@@ -155,7 +170,7 @@ loader.load((loader, resources) => {
             this.mouse.zindex = 1;
 
             this.hat_texture = randomProba(hats_proba) == -1 ? null : hats[randomRange(0, hats.length - 1)];
-            this.hat = createSprite(this.hat_texture, 0, -19, 1, 0, { x: 0.5, y: 1 }, { x: Math.random() >= 0.5 ? 1.2 : - 1.2, y: 1.2 });
+            this.hat = createSprite(this.hat_texture, 0, 0, 1, 0, { x: 0.5, y: 1 }, { x: Math.random() >= 0.5 ? 1 : - 1, y: 1 });
             this.hat.zindex = 2;
 
             this.container.addChild(this.body);
@@ -170,7 +185,7 @@ loader.load((loader, resources) => {
             // Mouvement
             if (this.is_grounded) {
                 if (this.objectif - 5 < this.container.x && this.objectif + 5 > this.container.x) {
-                    this.objectif = randomRange(16, app.screen.width - 16);
+                    this.objectif = randomRange(16 * this.scale, app.screen.width - (16 * this.scale));
                     return;
                 }
 
@@ -181,20 +196,34 @@ loader.load((loader, resources) => {
                     this.direction = 1;
                 }
             }
+            else {
+                if (this.direction == 1 && this.container.x < (16 * this.scale)) {
+                    this.direction = 0;
+                }
+
+                if (this.direction == 0 && this.container.x > app.screen.width - (16 * this.scale)) {
+                    this.direction = 1;
+                }
+            }
 
             this.container.y += this.yvelocity * deltaTime;
             this.container.x += this.direction == 0 ? this.speed * deltaTime : -this.speed * deltaTime;
 
             // Gravité
-            if (this.container.y < app.screen.height) {
-                this.is_grounded = false;
-                this.yvelocity += this.yvelocity < gravity * 2 ? gravity * this.weight * deltaTime / 10 : 0;
+            if (!this.pass_ground) {
+                if (this.container.y < app.screen.height) {
+                    this.is_grounded = false;
+                    this.yvelocity += this.yvelocity < gravity * 2 ? gravity * this.weight * deltaTime / 10 : 0;
+                }
+                else if (this.container.y >= app.screen.height) {
+                    this.is_grounded = true;
+                    this.is_jumpîng = false;
+                    this.yvelocity = 0;
+                    this.container.y = app.screen.height;
+                }
             }
-            else if (this.container.y >= app.screen.height) {
-                this.is_grounded = true;
-                this.is_jumpîng = false;
-                this.yvelocity = 0;
-                this.container.y = app.screen.height;
+            else {
+                this.yvelocity += this.yvelocity < gravity * 2 ? gravity * this.weight * deltaTime / 10 : 0;
             }
 
             this.breath(deltaTime);
@@ -240,13 +269,20 @@ loader.load((loader, resources) => {
             this.container.x = x;
             this.container.y = y;
         }
-    }
 
-    let slimes = [];
-    let index = 0;
-    for (let y = 0; y < 15; y++) {
-        slimes[index] = new Slime(randomRange(16, app.screen.width - 16), randomRange(64, app.screen.height - 64));
-        index++;
+        die() {
+            if (!this.dying) {
+                this.dying = true;
+                this.jump();
+                this.pass_ground = true;
+                setTimeout(() => {
+                    this.container.destroy({ children: true });
+                    removeSlime(this);
+                    addSlime();
+                    addSlime();
+                }, 1000);
+            }
+        }
     }
 
     // Functions
@@ -305,11 +341,56 @@ loader.load((loader, resources) => {
         return sprite;
     }
 
-    app.ticker.add((deltaTime) => {
-        for (let i in slimes) {
-            slimes[i].update(deltaTime);
+    function addSlime() {
+        slimes[slime_index] = new Slime(randomRange(16, app.screen.width - 16), randomRange(64, app.screen.height - 64));
+        slime_index++;
+    }
+
+    function removeSlime(slime) {
+        slimes.splice(slimes.indexOf(slime), 1);
+        slime_index--;
+    }
+
+    function updateSlime(count) {
+        last_viewer_count = viewer_count;
+        viewer_count = count;
+
+        if (viewer_count > last_viewer_count) {
+            let nbr_born = viewer_count - last_viewer_count;
+            for (let i = 0; i < nbr_born; i++) {
+                addSlime();
+            }
         }
-    });
+        else if (viewer_count < last_viewer_count) {
+            let nbr_die = last_viewer_count - viewer_count;
+            for (let i = 0; i < nbr_die; i++) {
+                removeSlime(slimes[randomRange(0, slimes.length - 1)]);
+            }
+        }
+    }
+
+    function getViewerCount() {
+        $.get({
+            url: `https://api.twitch.tv/helix/streams?user_login=nimeryatv`,
+            headers: {
+                "Authorization": `Bearer ${access_token}`,
+                "Client-Id": id
+            }
+        },
+            function (data, status) {
+                if (data.data.length > 0 && data.data[0].user_name == "NimeryaTV") {
+                    updateSlime(Math.max(10, data.data[0].viewer_count));
+                }
+                else {
+                    updateSlime(10);
+                }
+            });
+    }
+
+    getViewerCount();
+    setInterval(() => {
+        getViewerCount();
+    }, 1000);
 
     // Once connected, join a Twitch channel with your numeric channel id.
     socket.on('connect', () => {
@@ -322,11 +403,15 @@ loader.load((loader, resources) => {
         logClick(clickData.x, clickData.y);
     });
 
-    document.addEventListener("click", (event) => {
-        const normalizedX = (event.clientX * 1.0 / window.innerWidth).toPrecision(3);
-        const normalizedY = (event.clientY * 1.0 / window.innerHeight).toPrecision(3);
+    let slimes = [];
+    for (let y = 0; y < viewer_count; y++) {
+        addSlime();
+    }
 
-        logClick(normalizedX, normalizedY);
+    app.ticker.add((deltaTime) => {
+        for (let i in slimes) {
+            slimes[i].update(deltaTime);
+        }
     });
 });
 
