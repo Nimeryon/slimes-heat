@@ -125,6 +125,7 @@ loader.load((loader, resources) => {
     // Slime
     class Slime {
         constructor(x, y) {
+            let instance = this;
             this.x = x;
             this.y = y;
 
@@ -149,6 +150,8 @@ loader.load((loader, resources) => {
             this.breathingIn = true;
 
             this.container = new PIXI.Container();
+            this.container.interactive = true;
+            this.container.buttonMode = true;
             this.container.alpha = randomRange(0.5, 0.75, false);
             this.container.zindex = randomRange(0, 5);
             this.container.x = this.x;
@@ -156,6 +159,9 @@ loader.load((loader, resources) => {
             this.container.scale.x = this.scale;
             this.container.scale.y = this.scale;
             this.container.sortableChildren = true;
+            this.container.on('pointerup', function () {
+                instance.die(true);
+            });
 
             this.body_texture = bodies[randomProba(bodies_proba)][randomRange(0, 15)];
             this.body = createSprite(this.body_texture, 0, 0, 1, 0, { x: 0.5, y: 1 }, { x: 1, y: 1 });
@@ -270,7 +276,7 @@ loader.load((loader, resources) => {
             this.container.y = y;
         }
 
-        die() {
+        die(regen = false) {
             if (!this.dying) {
                 this.dying = true;
                 this.jump();
@@ -278,8 +284,9 @@ loader.load((loader, resources) => {
                 setTimeout(() => {
                     this.container.destroy({ children: true });
                     removeSlime(this);
-                    addSlime();
-                    addSlime();
+                    if (regen) {
+                        addSlime();
+                    }
                 }, 1000);
             }
         }
@@ -364,7 +371,7 @@ loader.load((loader, resources) => {
         else if (viewer_count < last_viewer_count) {
             let nbr_die = last_viewer_count - viewer_count;
             for (let i = 0; i < nbr_die; i++) {
-                removeSlime(slimes[randomRange(0, slimes.length - 1)]);
+                slimes[randomRange(0, slimes.length - 1)].die();
             }
         }
     }
