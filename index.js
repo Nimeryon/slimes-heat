@@ -37,6 +37,26 @@ loader.load((loader, resources) => {
         }
     ];
 
+    // Jump
+    const jump_proba = [
+        {
+            type: 0,
+            proba: 90
+        },
+        {
+            type: 1,
+            proba: 8
+        },
+        {
+            type: 2,
+            proba: 1
+        },
+        {
+            type: 3,
+            proba: 1
+        }
+    ];
+
     // Bodies
     const bodies = [
         generateTextures(resources["slime_body"].texture, 1, 16, 32, 21, 0, 0),
@@ -133,14 +153,18 @@ loader.load((loader, resources) => {
             this.dying = false;
             this.is_grounded = false;
             this.is_jumpîng = false;
+            this.is_flipping = false;
+            this.flip_direction = 1;
+            this.angle = 0;
             this.direction = 0;
 
-            this.scale = randomRange(1, 2, false);
+            this.scale = randomRange(1, 2.5, false);
             this.min_scale = { x: this.scale + 0.3, y: this.scale - 0.3 };
 
             this.jumpforce = randomRange(12, 20);
+            this.jumpforce_boost = 0;
             this.objectif = randomRange(16 * this.scale, app.screen.width - (16 * this.scale));
-            this.weight = randomRange(0.5, 1.5, false);
+            this.weight = randomRange(1, 1.5, false);
             this.speed = randomRange(slime_speed.min, slime_speed.max);
             this.yvelocity = 0;
 
@@ -152,7 +176,6 @@ loader.load((loader, resources) => {
             this.container = new PIXI.Container();
             this.container.interactive = true;
             this.container.buttonMode = true;
-            //this.container.alpha = randomRange(0.5, 0.75, false);
             this.container.zindex = randomRange(0, 5);
             this.container.x = this.x;
             this.container.y = this.y;
@@ -185,9 +208,32 @@ loader.load((loader, resources) => {
             this.container.addChild(this.hat);
 
             app.stage.addChild(this.container);
+
+            this.randomJump();
         }
 
         update(deltaTime) {
+            if (this.is_flipping) {
+                if (this.flip_direction == 1) {
+                    if (this.container.angle < 360) {
+                        this.container.angle += ((this.jumpforce + this.jumpforce_boost) * this.weight) * deltaTime;
+                    }
+                    else {
+                        this.container.angle = 0;
+                        this.is_flipping = false;
+                    }
+                }
+                else if (this.flip_direction == -1) {
+                    if (this.container.angle > -360) {
+                        this.container.angle -= ((this.jumpforce + this.jumpforce_boost) * this.weight) * deltaTime;
+                    }
+                    else {
+                        this.container.angle = 0;
+                        this.is_flipping = false;
+                    }
+                }
+            }
+
             // Mouvement
             if (this.is_grounded) {
                 if (this.objectif - 5 < this.container.x && this.objectif + 5 > this.container.x) {
@@ -235,10 +281,39 @@ loader.load((loader, resources) => {
             this.breath(deltaTime);
         }
 
+        randomJump(forceJump = null) {
+            setTimeout(() => {
+                switch (forceJump || randomProba(jump_proba)) {
+                    case 1: this.jump(); break;
+                    case 2: this.backFlip(); break;
+                    case 3: this.frontFlip(); break;
+                    default: break;
+                }
+                this.randomJump();
+            }, randomRange(500, 2500));
+        }
+
+        backFlip() {
+            if (!this.is_flipping) {
+                this.flip_direction = - 1;
+                this.jump();
+                this.is_flipping = true;
+            }
+        }
+
+        frontFlip() {
+            if (!this.is_flipping) {
+                this.flip_direction = 1;
+                this.jump();
+                this.is_flipping = true;
+            }
+        }
+
         jump() {
             if (!this.is_jumpîng && this.is_grounded) {
                 this.is_jumpîng = true;
-                this.yvelocity -= this.jumpforce + randomRange(-3, 3, false);
+                this.jumpforce_boost = randomRange(-3, 3);
+                this.yvelocity -= this.jumpforce + this.jumpforce_boost;
             }
         }
 
@@ -308,16 +383,16 @@ loader.load((loader, resources) => {
 
     function randomRange(min, max, int = true) {
         if (int) {
-            return Math.floor(Math.random() * (max - min + 1) + min);
+            return Math.floor(Math.random() * (max - min) + min);
         }
         else {
-            return Math.random() * (max - min + 1) + min;
+            return Math.random() * (max - min) + min;
         }
 
     }
 
     function logClick(x, y) {
-        slimes[randomRange(0, slimes.length - 1)].jump();
+        slimes[randomRange(0, slimes.length - 1)].randomJump(randomRange(1, 3));
         console.log(x, y);
     }
 
@@ -385,6 +460,7 @@ loader.load((loader, resources) => {
             }
         },
             function (data, status) {
+                console.log({ data: data, status: status });
                 if (data.data.length > 0 && data.data[0].user_name == "NimeryaTV") {
                     updateSlime(Math.max(10, data.data[0].viewer_count));
                 }
@@ -398,6 +474,10 @@ loader.load((loader, resources) => {
     setInterval(() => {
         getViewerCount();
     }, 1000);
+
+    setInterval(() => {
+
+    }, 500);
 
     // Once connected, join a Twitch channel with your numeric channel id.
     socket.on('connect', () => {
