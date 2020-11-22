@@ -1,4 +1,5 @@
 const socket = io('wss://heat-ebs.j38.net/');
+const urlParams = new URLSearchParams(window.location.search);
 
 //Create pixi app
 PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
@@ -452,32 +453,23 @@ loader.load((loader, resources) => {
     }
 
     function getViewerCount() {
-        $.get({
-            url: `https://api.twitch.tv/helix/streams?user_login=nimeryatv`,
-            headers: {
-                "Authorization": `Bearer ${access_token}`,
-                "Client-Id": id
-            }
-        },
+        $.get(`https://api.crunchprank.net/twitch/viewercount/${urlParams.get("streamer").toLowerCase()}`,
             function (data, status) {
-                console.log({ data: data, status: status });
-                if (data.data.length > 0 && data.data[0].user_name == "NimeryaTV") {
-                    updateSlime(Math.max(10, data.data[0].viewer_count));
+                let minSlime = urlParams.get("minSlime") != null ? parseInt(urlParams.get("minSlime")) : 10;
+                if (parseInt(data) > minSlime) {
+                    updateSlime(Math.max(minSlime, parseInt(data)));
                 }
                 else {
-                    updateSlime(10);
+                    updateSlime(minSlime);
                 }
+                console.log({ data: data, status: status });
             });
     }
 
     getViewerCount();
     setInterval(() => {
         getViewerCount();
-    }, 1000);
-
-    setInterval(() => {
-
-    }, 500);
+    }, 5000);
 
     // Once connected, join a Twitch channel with your numeric channel id.
     socket.on('connect', () => {
