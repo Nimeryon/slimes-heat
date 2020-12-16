@@ -1,3 +1,5 @@
+// https://tmi.twitch.tv/group/user/username/chatters
+
 const socket = io('wss://heat-ebs.j38.net/');
 const urlParams = new URLSearchParams(window.location.search);
 
@@ -19,7 +21,21 @@ loader.add("slime_hat", "sprites/hat.png");
 loader.load((loader, resources) => {
     let last_viewer_count = 0;
     let viewer_count = 0;
+    let last_viewer_list = [];
+    let viewer_list = [];
     let slime_index = 0;
+
+    // Text style
+    const text_style = new PIXI.TextStyle({
+        dropShadowAngle: 0,
+        dropShadowColor: "white",
+        dropShadowDistance: 1,
+        fill: "white",
+        fontFamily: "LEMONMILK-Bold",
+        fontSize: 12,
+        fontWeight: "bold",
+        strokeThickness: 4
+    });
 
     // Gravité
     const gravity = 9.81;
@@ -145,10 +161,10 @@ loader.load((loader, resources) => {
 
     // Slime
     class Slime {
-        constructor(x, y) {
-            let instance = this;
+        constructor(x, y, name) {
             this.x = x;
             this.y = y;
+            this.name = name;
 
             this.pass_ground = false;
             this.dying = false;
@@ -174,18 +190,15 @@ loader.load((loader, resources) => {
             this.timeBreath = randomRange(10, 30, false);
             this.breathingIn = true;
 
+            this.globalContainer = new PIXI.Container();
+            this.globalContainer.zindex = randomRange(0, 5);
+            this.globalContainer.x = this.x;
+            this.globalContainer.y = this.y;
+
             this.container = new PIXI.Container();
-            this.container.interactive = true;
-            this.container.buttonMode = true;
-            this.container.zindex = randomRange(0, 5);
-            this.container.x = this.x;
-            this.container.y = this.y;
             this.container.scale.x = this.scale;
             this.container.scale.y = this.scale;
             this.container.sortableChildren = true;
-            this.container.on('pointerup', function () {
-                instance.die(true);
-            });
 
             this.body_texture = bodies[randomProba(bodies_proba)][randomRange(0, 15)];
             this.body = createSprite(this.body_texture, 0, 0, 1, 0, { x: 0.5, y: 1 }, { x: 1, y: 1 });
@@ -208,7 +221,14 @@ loader.load((loader, resources) => {
             this.container.addChild(this.eye);
             this.container.addChild(this.hat);
 
-            app.stage.addChild(this.container);
+            this.textName = new PIXI.Text(this.name, text_style);
+            this.textName.anchor.set(0.5, 1);
+            this.textName.y = -this.container.height;
+
+            this.globalContainer.addChild(this.container);
+            this.globalContainer.addChild(this.textName);
+
+            app.stage.addChild(this.globalContainer);
 
             this.randomJump();
         }
@@ -237,42 +257,42 @@ loader.load((loader, resources) => {
 
             // Mouvement
             if (this.is_grounded) {
-                if (this.objectif - 5 < this.container.x && this.objectif + 5 > this.container.x) {
+                if (this.objectif - 5 < this.globalContainer.x && this.objectif + 5 > this.globalContainer.x) {
                     this.objectif = randomRange(16 * this.scale, app.screen.width - (16 * this.scale));
                     return;
                 }
 
-                if (this.container.x < this.objectif) {
+                if (this.globalContainer.x < this.objectif) {
                     this.direction = 0;
                 }
-                else if (this.container.x > this.objectif) {
+                else if (this.globalContainer.x > this.objectif) {
                     this.direction = 1;
                 }
             }
             else {
-                if (this.direction == 1 && this.container.x < (16 * this.scale)) {
+                if (this.direction == 1 && this.globalContainer.x < (16 * this.scale)) {
                     this.direction = 0;
                 }
 
-                if (this.direction == 0 && this.container.x > app.screen.width - (16 * this.scale)) {
+                if (this.direction == 0 && this.globalContainer.x > app.screen.width - (16 * this.scale)) {
                     this.direction = 1;
                 }
             }
 
-            this.container.y += this.yvelocity * deltaTime;
-            this.container.x += this.direction == 0 ? this.speed * deltaTime : -this.speed * deltaTime;
+            this.globalContainer.y += this.yvelocity * deltaTime;
+            this.globalContainer.x += this.direction == 0 ? this.speed * deltaTime : -this.speed * deltaTime;
 
             // Gravité
             if (!this.pass_ground) {
-                if (this.container.y < app.screen.height) {
+                if (this.globalContainer.y < app.screen.height) {
                     this.is_grounded = false;
                     this.yvelocity += this.yvelocity < gravity * 2 ? gravity * this.weight * deltaTime / 10 : 0;
                 }
-                else if (this.container.y >= app.screen.height) {
+                else if (this.globalContainer.y >= app.screen.height) {
                     this.is_grounded = true;
                     this.is_jumpîng = false;
                     this.yvelocity = 0;
-                    this.container.y = app.screen.height;
+                    this.globalContainer.y = app.screen.height;
                 }
             }
             else {
@@ -348,21 +368,18 @@ loader.load((loader, resources) => {
         }
 
         move(x, y) {
-            this.container.x = x;
-            this.container.y = y;
+            this.globalContainer.x = x;
+            this.globalContainer.y = y;
         }
 
-        die(regen = false) {
+        die() {
             if (!this.dying) {
                 this.dying = true;
                 this.jump();
                 this.pass_ground = true;
                 setTimeout(() => {
-                    this.container.destroy({ children: true });
+                    this.globalContainer.destroy({ children: true });
                     removeSlime(this);
-                    if (regen) {
-                        addSlime();
-                    }
                 }, 1000);
             }
         }
@@ -424,8 +441,8 @@ loader.load((loader, resources) => {
         return sprite;
     }
 
-    function addSlime() {
-        slimes[slime_index] = new Slime(randomRange(16, app.screen.width - 16), randomRange(64, app.screen.height - 64));
+    function addSlime(name) {
+        slimes[slime_index] = new Slime(randomRange(16, app.screen.width - 16), randomRange(64, app.screen.height - 64), name);
         slime_index++;
     }
 
@@ -434,42 +451,47 @@ loader.load((loader, resources) => {
         slime_index--;
     }
 
-    function updateSlime(count) {
-        last_viewer_count = viewer_count;
-        viewer_count = count;
+    function updateSlime(viewerList) {
+        console.log(viewerList);
 
-        if (viewer_count > last_viewer_count) {
-            let nbr_born = viewer_count - last_viewer_count;
-            for (let i = 0; i < nbr_born; i++) {
-                addSlime();
+        last_viewer_count = viewer_count;
+        viewer_count = viewerList.length;
+
+        last_viewer_list = viewer_list;
+        viewer_list = viewerList;
+
+        for (let i = 0; i < last_viewer_list.length; i++) {
+            if (viewer_list.indexOf(last_viewer_list[i]) == -1) {
+                for (let j = 0; j < slimes.length; j++) {
+                    if (slimes[j].name == last_viewer_list[i]) {
+                        slimes[j].die();
+                        break;
+                    }
+                }
             }
         }
-        else if (viewer_count < last_viewer_count) {
-            let nbr_die = last_viewer_count - viewer_count;
-            for (let i = 0; i < nbr_die; i++) {
-                slimes[randomRange(0, slimes.length - 1)].die();
+
+        for (let i = 0; i < viewer_list.length; i++) {
+            if (last_viewer_list.indexOf(viewer_list[i]) == -1) {
+                addSlime(viewer_list[i]);
             }
         }
     }
 
     function getViewerCount() {
-        $.get(`https://api.crunchprank.net/twitch/viewercount/${urlParams.get("streamer").toLowerCase()}`,
-            function (data, status) {
-                let minSlime = urlParams.get("minSlime") != null ? parseInt(urlParams.get("minSlime")) : 10;
-                if (parseInt(data) > minSlime) {
-                    updateSlime(Math.max(minSlime, parseInt(data)));
-                }
-                else {
-                    updateSlime(minSlime);
-                }
-                console.log({ data: data, status: status });
-            });
+        $.ajax({
+            url: `https://tmi.twitch.tv/group/user/${urlParams.get("streamer").toLowerCase()}/chatters`,
+            dataType: "jsonp",
+            success: function (data) {
+                updateSlime(data.data.chatters.viewers);
+            }
+        })
     }
 
     getViewerCount();
     setInterval(() => {
         getViewerCount();
-    }, 5000);
+    }, 10000);
 
     // Once connected, join a Twitch channel with your numeric channel id.
     socket.on('connect', () => {
