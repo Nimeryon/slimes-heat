@@ -1,6 +1,4 @@
 // https://tmi.twitch.tv/group/user/username/chatters
-
-const socket = io('wss://heat-ebs.j38.net/');
 const urlParams = new URLSearchParams(window.location.search);
 
 //Create pixi app
@@ -23,6 +21,7 @@ loader.load((loader, resources) => {
     let last_viewer_list = {};
     let viewer_list = {};
     let slime_index = 0;
+    let slimes = [];
 
     // Text style
     const text_style = (color) => {
@@ -438,11 +437,6 @@ loader.load((loader, resources) => {
 
     }
 
-    function logClick(x, y) {
-        slimes[randomRange(0, slimes.length - 1)].randomJump(randomRange(1, 3));
-        console.log(x, y);
-    }
-
     function generateTextures(texture, nbr_tile_x, nbr_tile_y, tile_size_x, tile_size_y, offset_x = 0, offset_y = 0) {
         let textures = [];
         let index = 0;
@@ -530,23 +524,6 @@ loader.load((loader, resources) => {
     setInterval(() => {
         getViewerCount();
     }, 30000);
-
-    // Once connected, join a Twitch channel with your numeric channel id.
-    socket.on('connect', () => {
-        socket.emit("channel", 174535992);
-    });
-
-    // Now, listen for click events.
-    socket.on('click', (data) => {
-        console.log(data);
-        const clickData = JSON.parse(data);
-        logClick(clickData.x, clickData.y);
-    });
-
-    let slimes = [];
-    for (let y = 0; y < viewer_count; y++) {
-        addSlime();
-    }
 
     app.ticker.add((deltaTime) => {
         for (let i in slimes) {
