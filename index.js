@@ -19,7 +19,6 @@ loader.add("slime_body", "sprites/body.png");
 loader.add("slime_mouse_eye", "sprites/mouses_eyes.png");
 loader.add("slime_hat", "sprites/hat.png");
 loader.load((loader, resources) => {
-    let last_viewer_count = 0;
     let viewer_count = 0;
     let last_viewer_list = {};
     let viewer_list = {};
@@ -539,6 +538,7 @@ loader.load((loader, resources) => {
 
     // Now, listen for click events.
     socket.on('click', (data) => {
+        console.log(data);
         const clickData = JSON.parse(data);
         logClick(clickData.x, clickData.y);
     });
