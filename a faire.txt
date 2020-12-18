@@ -1,0 +1,2 @@
+- vue modérateur
+- Quand un quelqu'un clique cela fait sauter son slime

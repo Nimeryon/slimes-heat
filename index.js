@@ -21,21 +21,23 @@ loader.add("slime_hat", "sprites/hat.png");
 loader.load((loader, resources) => {
     let last_viewer_count = 0;
     let viewer_count = 0;
-    let last_viewer_list = [];
-    let viewer_list = [];
+    let last_viewer_list = {};
+    let viewer_list = {};
     let slime_index = 0;
 
     // Text style
-    const text_style = new PIXI.TextStyle({
-        dropShadowAngle: 0,
-        dropShadowColor: "white",
-        dropShadowDistance: 1,
-        fill: "white",
-        fontFamily: "LEMONMILK-Bold",
-        fontSize: 12,
-        fontWeight: "bold",
-        strokeThickness: 4
-    });
+    const text_style = (color) => {
+        return new PIXI.TextStyle({
+            dropShadowAngle: 0,
+            dropShadowColor: "white",
+            dropShadowDistance: 1,
+            fill: color,
+            fontFamily: "LEMONMILK-Bold",
+            fontSize: 13,
+            fontWeight: "bold",
+            strokeThickness: 4
+        });
+    };
 
     // Gravité
     const gravity = 9.81;
@@ -161,7 +163,7 @@ loader.load((loader, resources) => {
 
     // Slime
     class Slime {
-        constructor(x, y, name) {
+        constructor(x, y, name, list) {
             this.x = x;
             this.y = y;
             this.name = name;
@@ -221,7 +223,35 @@ loader.load((loader, resources) => {
             this.container.addChild(this.eye);
             this.container.addChild(this.hat);
 
-            this.textName = new PIXI.Text(this.name, text_style);
+            switch (list) {
+                case "vips":
+                    this.color = 0x273c75;
+                    break;
+
+                case "moderators":
+                    this.color = 0x4cd137;
+                    break;
+
+                case "staff":
+                    this.color = 0xe84118;
+                    break;
+
+                case "admins":
+                    this.color = 0xfbc531;
+                    break;
+
+                case "global_mods":
+                    this.color = 0x9c88ff;
+                    break;
+
+                case "viewers":
+                    this.color = 0xf5f6fa;
+                    break;
+
+                default:
+                    break;
+            }
+            this.textName = new PIXI.Text(this.name, text_style(this.color));
             this.textName.anchor.set(0.5, 1);
             this.textName.y = -this.container.height;
 
@@ -441,8 +471,8 @@ loader.load((loader, resources) => {
         return sprite;
     }
 
-    function addSlime(name) {
-        slimes[slime_index] = new Slime(randomRange(16, app.screen.width - 16), randomRange(64, app.screen.height - 64), name);
+    function addSlime(name, list) {
+        slimes[slime_index] = new Slime(randomRange(16, app.screen.width - 16), randomRange(64, app.screen.height - 64), name, list);
         slime_index++;
     }
 
@@ -451,29 +481,38 @@ loader.load((loader, resources) => {
         slime_index--;
     }
 
-    function updateSlime(viewerList) {
+    function updateSlime(count, viewerList) {
         console.log(viewerList);
 
         last_viewer_count = viewer_count;
-        viewer_count = viewerList.length;
+        viewer_count = count;
 
         last_viewer_list = viewer_list;
         viewer_list = viewerList;
 
-        for (let i = 0; i < last_viewer_list.length; i++) {
-            if (viewer_list.indexOf(last_viewer_list[i]) == -1) {
-                for (let j = 0; j < slimes.length; j++) {
-                    if (slimes[j].name == last_viewer_list[i]) {
-                        slimes[j].die();
-                        break;
+        for (last_list in last_viewer_list) {
+            if (last_list != "broadcaster") {
+                for (let i = 0; i < last_viewer_list[last_list].length; i++) {
+                    if (viewer_list[last_list].indexOf(last_viewer_list[last_list][i]) == -1) {
+                        for (let j = 0; j < slimes.length; j++) {
+                            if (slimes[j].name == last_viewer_list[last_list][i]) {
+                                slimes[j].die();
+                                break;
+                            }
+                        }
                     }
                 }
             }
         }
 
-        for (let i = 0; i < viewer_list.length; i++) {
-            if (last_viewer_list.indexOf(viewer_list[i]) == -1) {
-                addSlime(viewer_list[i]);
+        for (list in viewer_list) {
+            if (list != "broadcaster") {
+                for (let i = 0; i < viewer_list[list].length; i++) {
+                    console.log(last_viewer_list[list]);
+                    if (last_viewer_list[list] == undefined || last_viewer_list[list].indexOf(viewer_list[list][i]) == -1) {
+                        addSlime(viewer_list[list][i], list);
+                    }
+                }
             }
         }
     }
@@ -483,15 +522,15 @@ loader.load((loader, resources) => {
             url: `https://tmi.twitch.tv/group/user/${urlParams.get("streamer").toLowerCase()}/chatters`,
             dataType: "jsonp",
             success: function (data) {
-                updateSlime(data.data.chatters.viewers);
+                updateSlime(data.data.chatter_count - 1, data.data.chatters);
             }
-        })
+        });
     }
 
     getViewerCount();
     setInterval(() => {
         getViewerCount();
-    }, 10000);
+    }, 30000);
 
     // Once connected, join a Twitch channel with your numeric channel id.
     socket.on('connect', () => {
